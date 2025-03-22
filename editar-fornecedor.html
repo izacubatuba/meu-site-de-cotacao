@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Fornecedor</title>
+    <link rel="stylesheet" href="fornecedor.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 0;
+            font-size: 24px;
+        }
+
+        .section {
+            background: white;
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 20px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-salvar {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-salvar:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-excluir {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-excluir:hover {
+            background: #c82333;
+        }
+
+        .btn-voltar {
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            padding: 12px;
+            width: 100%;
+        }
+
+        .btn-voltar:hover {
+            background: #5a6268;
+        }
+    </style>
+
+    <script>
+        // Função para obter o parâmetro "id" da URL
+        function obterParametroURL(nome) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(nome);
+        }
+
+        // Função para carregar os dados do fornecedor
+        async function carregarFornecedor() {
+            const id = obterParametroURL('id');
+            if (!id) {
+                alert('Fornecedor não encontrado.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/fornecedor/${id}`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar fornecedor');
+                }
+                const fornecedor = await response.json();
+
+                // Preenchendo os campos do formulário com os dados do fornecedor
+                document.getElementById('id-fornecedor').value = fornecedor.id;
+                document.getElementById('nome-vendedor').value = fornecedor.nome_vendedor || '';
+                document.getElementById('nome-empresa').value = fornecedor.nome_empresa || '';
+                document.getElementById('contato').value = fornecedor.contato || '';
+
+                // Atualizar o fornecedor ao submeter o formulário
+                document.getElementById('form-fornecedor').onsubmit = function(event) {
+                    event.preventDefault();
+                    atualizarFornecedor(id);
+                };
+
+                // Excluir o fornecedor ao clicar no botão
+                document.getElementById('btn-excluir').onclick = function() {
+                    excluirFornecedor(id);
+                };
+
+            } catch (error) {
+                console.error('Erro ao carregar fornecedor:', error);
+            }
+        }
+
+        // Função para atualizar o fornecedor
+        async function atualizarFornecedor(id) {
+            const nome_vendedor = document.getElementById('nome-vendedor').value;
+            const nome_empresa = document.getElementById('nome-empresa').value;
+            const contato = document.getElementById('contato').value;
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/fornecedor/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nome_vendedor,
+                        nome_empresa,
+                        contato
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Fornecedor atualizado com sucesso!');
+                    window.location.href = 'http://127.0.0.1:5500/forn_cadastrados.html';
+                } else {
+                    const error = await response.json();
+                    alert(`Erro ao atualizar: ${error.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar fornecedor:', error);
+            }
+        }
+
+        // Função para excluir o fornecedor
+        async function excluirFornecedor(id) {
+            const confirmacao = confirm("Tem certeza que deseja excluir este fornecedor?");
+            if (!confirmacao) return;
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/fornecedor/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Fornecedor excluído com sucesso!');
+                    window.location.href = 'http://127.0.0.1:5500/forn_cadastrados.html'; 
+                } else {
+                    const error = await response.json();
+                    alert(`Erro ao excluir: ${error.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao excluir fornecedor:', error);
+            }
+        }
+
+        window.onload = carregarFornecedor;
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Editar Fornecedor</h1>
+    </header>
+
+    <div class="section">
+        <h2>Atualizar Fornecedor</h2>
+        <form id="form-fornecedor">
+            <input type="hidden" id="id-fornecedor">
+            <div class="form-group">
+                <label for="nome-vendedor">Nome do Vendedor:</label>
+                <input type="text" id="nome-vendedor" required>
+
+                <label for="nome-empresa">Nome da Empresa:</label>
+                <input type="text" id="nome-empresa" required>
+
+                <label for="contato">Contato:</label>
+                <input type="text" id="contato" required>
+
+                <button type="submit" class="btn btn-salvar">Salvar Alterações</button>
+                <button type="button" id="btn-excluir" class="btn btn-excluir">Excluir Fornecedor</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="section">
+        <a href="http://127.0.0.1:5500/usuario.html" class="btn btn-voltar">Voltar para a Página Inicial</a>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fornecedores Cadastrados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f4f7fa;
+            color: #333;
+            text-align: center;
+        }
+        header {
+            background-color: #0066cc;
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin: 0;
+            font-size: 36px;
+            font-weight: 600;
+        }
+        #fornecedoresContainer {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .fornecedor-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+            font-weight: 400;
+        }
+        .fornecedor-card h4 {
+            font-size: 22px;
+            font-weight: 500;
+            color: #333;
+        }
+        .fornecedor-card p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .btn-voltar {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn-voltar:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        .btn-editar, .btn-excluir {
+            padding: 5px 12px;
+            margin-top: 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            color: white;
+            display: inline-block;
+            width: auto;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-editar {
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+        .btn-excluir {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-editar:hover {
+            background-color: #e0a800;
+            border-color: #e0a800;
+            transform: translateY(-2px);
+        }
+        .btn-excluir:hover {
+            background-color: #c82333;
+            border-color: #c82333;
+            transform: translateY(-2px);
+        }
+        .btn-editar:active, .btn-excluir:active {
+            transform: scale(0.95);
+        }
+        .mensagem-sucesso {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #6ecf76;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            display: none;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        .mensagem-error {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #dc3545;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Fornecedores Cadastrados</h1>
+</header>
+
+<div id="fornecedoresContainer"></div>
+
+<div id="mensagemSucesso" class="mensagem-sucesso">Fornecedor excluído com sucesso!</div>
+<div id="mensagemError" class="mensagem-error">Erro ao excluir o fornecedor.</div>
+
+<a href="usuario.html" class="btn-voltar">Voltar</a>
+
+<script>
+async function carregarFornecedores() {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/fornecedores');
+        if (!response.ok) {
+            throw new Error(`Erro HTTP! Status: ${response.status}`);
+        }
+        const fornecedores = await response.json();
+        console.log(fornecedores); // Debugging para verificar os dados recebidos
+        exibirFornecedores(fornecedores);
+    } catch (error) {
+        console.error('Erro ao carregar fornecedores:', error);
+    }
+}
+
+function exibirFornecedores(fornecedores) {
+    const container = document.getElementById('fornecedoresContainer');
+    container.innerHTML = '';
+    fornecedores.forEach(fornecedor => {
+        const card = document.createElement('div');
+        card.classList.add('fornecedor-card');
+        card.innerHTML = `
+            <h4>${fornecedor.nome_empresa || 'Nome da Empresa Indefinido'}</h4>
+            <p><strong>Vendedor:</strong> ${fornecedor.nome_vendedor || 'Indefinido'}</p>
+            <p><strong>Contato:</strong> ${fornecedor.contato || 'Indefinido'}</p>
+            <a href="http://127.0.0.1:5500/editar-fornecedor.html?id=${fornecedor.id}" class="btn-editar">Editar</a>
+            <a href="#" class="btn-excluir" onclick="excluirFornecedor(${fornecedor.id}, '${fornecedor.nome_empresa}')">Excluir</a>
+        `;
+        container.appendChild(card);
+    });
+}
+
+async function excluirFornecedor(id, nomeEmpresa) {
+    if (confirm(`Você tem certeza que deseja excluir o fornecedor: ${nomeEmpresa}?`)) {
+        try {
+            // Enviar a requisição DELETE para a API
+            const response = await fetch(`http://127.0.0.1:5000/fornecedor/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                // Exibe a mensagem de sucesso na tela
+                const mensagemSucesso = document.getElementById('mensagemSucesso');
+                mensagemSucesso.innerHTML = `Fornecedor ${nomeEmpresa} excluído com sucesso!`;
+                mensagemSucesso.style.display = 'block';
+
+                // Esconde a mensagem de sucesso após 3 segundos
+                setTimeout(() => {
+                    mensagemSucesso.style.display = 'none';
+                }, 3000);
+
+                // Recarregar a lista de fornecedores após a exclusão
+                carregarFornecedores();
+            } else {
+                document.getElementById('mensagemError').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro ao excluir fornecedor:', error);
+            document.getElementById('mensagemError').style.display = 'block';
+        }
+    }
+}
+
+window.onload = carregarFornecedores;
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Fornecedor</title>
+    <link rel="stylesheet" href="fornecedor.css">
+</head>
+<body>
+    <header>
+        <h1>Cadastrar Fornecedor</h1>
+    </header>
+
+    <div class="section">
+        <h2>Formulário de Cadastro de Fornecedor</h2>
+        <form id="formCadastroFornecedor">
+            <div class="form-group">
+                <label for="nomeVendedor">Nome do Vendedor</label>
+                <input type="text" id="nomeVendedor" placeholder="Nome do Vendedor" required>
+            </div>
+            <div class="form-group">
+                <label for="nomeEmpresa">Nome da Empresa</label>
+                <input type="text" id="nomeEmpresa" placeholder="Nome da Empresa" required>
+            </div>
+            <div class="form-group">
+                <label for="contatoFornecedor">Contato (Telefone)</label>
+                <input type="text" id="contatoFornecedor" placeholder="Contato (Telefone)" required>
+            </div>
+            <button type="submit">Salvar Fornecedor</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <a href="http://127.0.0.1:5500/usuario.html" class="btn-voltar">Voltar para a Página Inicial</a>
+    </div>
+
+    <script>
+        // Função para cadastrar fornecedor
+        document.getElementById('formCadastroFornecedor').addEventListener('submit', function(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+
+            const nomeVendedor = document.getElementById('nomeVendedor').value;
+            const nomeEmpresa = document.getElementById('nomeEmpresa').value;
+            const contatoFornecedor = document.getElementById('contatoFornecedor').value;
+
+            // Verifica se os campos não estão vazios
+            if (!nomeVendedor || !nomeEmpresa || !contatoFornecedor) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            // Realiza a requisição POST para cadastrar o fornecedor na API
+            fetch('http://127.0.0.1:5000/fornecedor', {  // Corrigido para /fornecedor
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome_vendedor: nomeVendedor,  // Ajustado para corresponder com os dados esperados pela API
+                    nome_empresa: nomeEmpresa,
+                    contato: contatoFornecedor
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert('Fornecedor cadastrado com sucesso!'); // Exibe a mensagem de sucesso
+                    // Limpa os campos do formulário
+                    document.getElementById('nomeVendedor').value = '';
+                    document.getElementById('nomeEmpresa').value = '';
+                    document.getElementById('contatoFornecedor').value = '';
+                } else {
+                    alert('Erro ao cadastrar fornecedor: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Erro ao cadastrar fornecedor: ' + error.message);
+            });
+        });
+    </script>
+
+    <script src="fornecedor.js"></script>
+</body>
+</html>
