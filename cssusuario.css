@@ -243,6 +243,38 @@ form button:hover {
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
+/* Estilo para o botão Adicionar */
+button.adicionar-btn {
+    background-color: #28a745; /* Cor de fundo verde */
+    color: white;              /* Texto branco */
+    border: none;              /* Sem borda */
+    padding: 10px 20px;        /* Espaçamento interno */
+    text-align: center;        /* Alinhamento do texto */
+    font-size: 16px;           /* Tamanho da fonte */
+    margin-top: 10px;          /* Espaçamento superior */
+    cursor: pointer;          /* Cursor de clique */
+    border-radius: 5px;        /* Bordas arredondadas */
+    display: inline-block;     /* Exibe como um bloco inline */
+}
+
+button.adicionar-btn:hover {
+    background-color: #218838; /* Cor de fundo mais escura ao passar o mouse */
+}
+
+/* Garantir que o botão esteja visível */
+button.adicionar-btn:focus {
+    outline: none; /* Remove o contorno ao focar */
+}
+
+
+
+/* Adiciona efeito de hover no botão */
+button:hover {
+    background-color: #45a049; /* Cor de fundo mais escura ao passar o mouse */
+}
+
+
+
 .btn-voltar:hover {
     background-color: #0056b3;
     transform: scale(1.05);

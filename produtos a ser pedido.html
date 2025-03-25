@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos para Pedido</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 80%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px;
+            display: inline-block;
+            width: 220px;
+            background: #fff;
+            vertical-align: top;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .product-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .product-card h3 {
+            font-size: 18px;
+            color: #333;
+            margin: 10px 0;
+        }
+        .product-card p {
+            font-size: 14px;
+            color: #777;
+        }
+        .delete-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        #voltarBtn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 15px 30px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        #voltarBtn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Produtos no Carrinho</h1>
+        <input type="text" id="searchInput" placeholder="Pesquisar produtos..." oninput="filterProducts()">
+        <div id="cotacaoContainer">Carregando produtos...</div>
+    </div>
+
+    <!-- Botão fixo "Voltar" -->
+    <button id="voltarBtn" onclick="window.history.back()">Voltar</button>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5000'; // URL da API local
+        let produtos = [];
+
+        // Função para buscar os produtos no carrinho da API
+        function fetchCarrinho() {
+            const url = `${API_URL}/carrinho`;  
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    produtos = data.map(item => {
+                        return {
+                            cod_barras: item.cod_barras,
+                            descricao_produto: item.descricao_produto,
+                            imagem: item.imagem,
+                            quantidade: item.quantidade // Adiciona a quantidade do produto
+                        };
+                    });
+                    renderizarProdutos(produtos);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar os produtos do carrinho:', error);
+                    document.getElementById('cotacaoContainer').innerHTML = '<p>Erro ao carregar os produtos.</p>';
+                });
+        }
+
+        // Função para renderizar os produtos do carrinho
+        function renderizarProdutos(produtos) {
+            const produtosContainer = document.getElementById('cotacaoContainer');
+            produtosContainer.innerHTML = '';
+
+            if (produtos.length === 0) {
+                produtosContainer.innerHTML = '<p>Nenhum produto encontrado.</p>';
+                return;
+            }
+
+            produtos.forEach(produto => {
+                const card = document.createElement('div');
+                card.classList.add('product-card');
+
+                const img = document.createElement('img');
+                img.src = produto.imagem;
+                img.alt = produto.descricao_produto;
+                card.appendChild(img);
+
+                const nome = document.createElement('h3');
+                nome.textContent = produto.descricao_produto;
+                card.appendChild(nome);
+
+                const codigoBarras = document.createElement('p');
+                codigoBarras.textContent = `Código: ${produto.cod_barras}`;
+                card.appendChild(codigoBarras);
+
+                // Exibir quantidade do produto
+                const quantidade = document.createElement('p');
+                quantidade.textContent = `Quantidade: ${produto.quantidade}`;
+                card.appendChild(quantidade);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Deletar';
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.onclick = () => confirmarExclusao(produto.cod_barras);
+                card.appendChild(deleteBtn);
+
+                produtosContainer.appendChild(card);
+            });
+        }
+
+        // Função para filtrar os produtos do carrinho com base na pesquisa
+        function filterProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (!query) {
+                renderizarProdutos(produtos);
+                return;
+            }
+            const filteredProducts = produtos.filter(produto => produto.descricao_produto.toLowerCase().includes(query));
+            renderizarProdutos(filteredProducts);
+        }
+
+        // Função para confirmar exclusão do produto
+        function confirmarExclusao(codigoBarras) {
+            const confirmar = window.confirm('Tem certeza que deseja excluir este produto do carrinho?');
+            if (confirmar) {
+                deletarProduto(codigoBarras);
+            }
+        }
+
+        // Função para deletar um produto do carrinho
+        async function deletarProduto(codigoBarras) {
+            try {
+                const response = await fetch(`${API_URL}/carrinho/${codigoBarras}`, { method: "DELETE" });
+                if (!response.ok) throw new Error("Erro ao deletar produto do carrinho");
+                alert("Produto deletado com sucesso!");
+                fetchCarrinho();  // Atualiza os produtos do carrinho após deletar
+            } catch (error) {
+                console.error("Erro ao deletar produto:", error);
+            }
+        }
+
+        // Carrega os produtos do carrinho quando a página for carregada
+        window.onload = fetchCarrinho;
+    </script>
+</body>
+</html>

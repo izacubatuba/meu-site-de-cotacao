@@ -19,13 +19,14 @@
             <li><a href="#">Produtos</a></li>
             <li><a href="http://127.0.0.1:5500/fornecedor.html">Cadastrar Fornecedor</a></li>
             <li><a href="http://127.0.0.1:5500/forn_cadastrados.html">Fornecedores Cadastrados</a></li>
+            <li><a href="http://127.0.0.1:59553/produtos%20a%20ser%20pedido.html">Produtos a ser Pedidos</a></li>
         </ul>
     </nav>
 
     <div id="cotacao" class="section">
         <h2>Produtos para Pedidos</h2>
         <!-- Contador de produtos -->
-        <div id="productCount">Carregando...</div>
+        <div id="productCount"></div>
 
         <div id="cotacaoContainer">
             <!-- Produtos serão exibidos aqui -->
@@ -39,10 +40,16 @@
 
         // Função para buscar os produtos da API
         function fetchProdutos() {
-            const url = `${API_URL}/produtos`;  // URL da API local
+            const url = `${API_URL}/produtos`;  // URL da API local corrigida
 
             fetch(url)
-                .then(response => response.json())  // Converte a resposta para JSON
+                .then(response => {
+                    // Verifique se a resposta é OK (status 200)
+                    if (!response.ok) {
+                        throw new Error(`Erro HTTP: ${response.status}`);
+                    }
+                    return response.json(); // Converte a resposta para JSON
+                })
                 .then(data => {
                     const produtosContainer = document.getElementById('cotacaoContainer');
                     
@@ -84,31 +91,58 @@
                 // Código de barras
                 const codigoBarras = document.createElement('p');
                 codigoBarras.classList.add('codigo-barras');
-                codigoBarras.textContent = `Código: ${produto.cod_barras}`;  // Usando 'cod_barras'
+                codigoBarras.textContent = `Código: ${produto.cod_barras}`;  // Corrigido com interpolação
                 productCard.appendChild(codigoBarras);
 
-                // Botão para deletar
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Deletar';
-                deleteBtn.onclick = () => deletarProduto(produto.cod_barras);
-                productCard.appendChild(deleteBtn);
+                // Botão para adicionar ao carrinho
+                const addBtn = document.createElement('button');
+                addBtn.textContent = 'Adicionar';
+                addBtn.classList.add('adicionar-btn');  // Adicionando a classe personalizada
+                addBtn.onclick = () => adicionarProduto(produto);  // Função para adicionar o produto
+                productCard.appendChild(addBtn);
 
                 // Adiciona o card ao container de produtos
                 produtosContainer.appendChild(productCard);
             });
 
-            // Atualiza o contador de produtos
-            updateProductCount();
+            updateProductCount(); // Atualiza o contador de produtos
+        }
+
+        // Função para adicionar o produto na tabela 'pedidos_para_o_mercado'
+        function adicionarProduto(produto) {
+            const quantidade = prompt("Quantas unidades deseja adicionar?"); // Pergunta a quantidade ao usuário
+            if (quantidade && quantidade > 0) {
+                // Chama a API para adicionar o produto na tabela de pedidos_para_o_mercado
+                fetch(`${API_URL}/adicionar-pedido`, {  // Corrigido com interpolação
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_produto: produto.id_produto,  // ID do produto
+                        quantidade: quantidade,
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Produto adicionado ao pedido com sucesso!');
+                    } else {
+                        alert('Erro ao adicionar o produto ao pedido.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao adicionar o produto:', error);
+                    alert('Erro ao adicionar o produto ao pedido.');
+                });
+            } else {
+                alert('Por favor, insira uma quantidade válida.');
+            }
         }
 
         // Função para filtrar os produtos com base no termo de pesquisa
         function filterProducts() {
             const query = document.getElementById('searchInput').value.toLowerCase();  // Obtém o valor da pesquisa
-            if (!query) {
-                renderizarProdutos(produtos);  // Se não houver pesquisa, renderiza todos os produtos
-                return;
-            }
-
             const filteredProducts = produtos.filter(produto => {
                 const productName = produto.descricao_produto.toLowerCase();  // Nome do produto
                 return productName.includes(query);  // Filtra os produtos com base na pesquisa
@@ -122,28 +156,7 @@
             const visibleProducts = document.querySelectorAll('.product-card');
             const productCount = visibleProducts.length;  // Número de produtos visíveis
             const productCountDisplay = document.getElementById('productCount');
-            productCountDisplay.textContent = `Produtos encontrados: ${productCount}`;
-        }
-
-        // Função para deletar um produto na API e removê-lo do LocalStorage
-        async function deletarProduto(codigoBarras) {
-            try {
-                const response = await fetch(`${API_URL}/produto/${codigoBarras}`, {  // Usando URL local
-                    method: "DELETE"
-                });
-
-                if (!response.ok) throw new Error("Erro ao deletar produto");
-                
-                // Remove o produto do LocalStorage
-                let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-                produtos = produtos.filter(produto => produto.cod_barras !== codigoBarras);
-                localStorage.setItem("produtos", JSON.stringify(produtos));
-                
-                alert("Produto deletado com sucesso!");
-                fetchProdutos(); // Recarrega a lista de produtos
-            } catch (error) {
-                console.error("Erro ao deletar produto:", error);
-            }
+            productCountDisplay.textContent = `Produtos encontrados: ${productCount}`;  // Corrigido com interpolação
         }
 
         // Adiciona o evento de input para pesquisa
